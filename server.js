@@ -5,7 +5,6 @@ const path = require('path');
 const app = express();
 const PORT = 3000;
 
-app.use(express.static('public'));
 app.use(express.json());
 
 // Parse Maven timestamp format: YYYYMMDDHHMMSS
@@ -153,6 +152,10 @@ app.get('/api/check', async (req, res) => {
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
+});
+
+app.get('/', function(req, res) {
+  res.sendFile(path.join(__dirname, 'public/index.html'));
 });
 
 app.listen(PORT, () => {
