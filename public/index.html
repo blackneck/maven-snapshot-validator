@@ -240,14 +240,6 @@
         function renderResult(data) {
             let html = '';
             
-            // Main info section
-            html += `
-                <div class="section highlight">
-                    <div class="date">${data.lastUpdated.formatted}</div>
-                    <div class="relative">${data.lastUpdated.relative}</div>
-                </div>
-            `;
-            
             // Package info
             html += `
                 <div class="section">
