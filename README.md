@@ -1,4 +1,4 @@
-# Maven Snapshot Checker
+# Maven Snapshot Validator
 
 A simple web application to check when Maven SNAPSHOT packages were published to the Sonatype Central snapshot repository.
 
