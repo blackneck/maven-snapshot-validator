@@ -207,6 +207,41 @@
     <div id="result" class="result-container"></div>
 
     <script>
+        // Update URL when form fields change
+        function updateURL() {
+            const groupId = document.getElementById('groupId').value.trim();
+            const artifactId = document.getElementById('artifactId').value.trim();
+            const version = document.getElementById('version').value.trim();
+            
+            if (groupId || artifactId || version) {
+                const params = new URLSearchParams();
+                if (groupId) params.append('groupId', groupId);
+                if (artifactId) params.append('artifactId', artifactId);
+                if (version) params.append('version', version);
+                window.history.replaceState({}, '', `?${params.toString()}`);
+            } else {
+                window.history.replaceState({}, '', window.location.pathname);
+            }
+        }
+
+        // Parse URL query parameters and populate form
+        function loadQueryParams() {
+            const params = new URLSearchParams(window.location.search);
+            const groupId = params.get('groupId');
+            const artifactId = params.get('artifactId');
+            const version = params.get('version');
+            
+            if (groupId) document.getElementById('groupId').value = groupId;
+            if (artifactId) document.getElementById('artifactId').value = artifactId;
+            if (version) document.getElementById('version').value = version;
+            
+            // If all parameters are present, automatically check the package
+            if (groupId && artifactId && version) {
+                // Use setTimeout to ensure DOM is fully ready
+                setTimeout(checkPackage, 100);
+            }
+        }
+
         async function checkPackage() {
             const groupId = document.getElementById('groupId').value.trim();
             const artifactId = document.getElementById('artifactId').value.trim();
@@ -221,6 +256,9 @@
             
             resultEl.className = 'result-container visible';
             resultEl.innerHTML = '<div class="loading"><span class="spinner"></span>Fetching metadata...</div>';
+            
+            // Update URL with current parameters
+            updateURL();
             
             try {
                 const response = await fetch(`/api/check?groupId=${encodeURIComponent(groupId)}&artifactId=${encodeURIComponent(artifactId)}&version=${encodeURIComponent(version)}`);
@@ -343,6 +381,16 @@
         // Allow Enter key to submit
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') checkPackage();
+        });
+
+        // Update URL when form fields change
+        document.addEventListener('DOMContentLoaded', () => {
+            loadQueryParams();
+            
+            // Add input event listeners to update URL in real-time
+            document.getElementById('groupId').addEventListener('input', updateURL);
+            document.getElementById('artifactId').addEventListener('input', updateURL);
+            document.getElementById('version').addEventListener('input', updateURL);
         });
     </script>
 </body>
