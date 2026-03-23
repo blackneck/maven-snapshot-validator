@@ -298,16 +298,34 @@
                 </div>
             `;
             
-            // Available versions
-            if (data.availableVersions && data.availableVersions.length > 0) {
-                html += `
-                    <div class="section">
-                        <div class="section-title">Available Versions</div>
-                        <p>${data.availableVersions.map(v => `<code class="mono">${v}</code>`).join(', ')}</p>
+            // Android Integration snippets
+            html += `
+                <div class="section">
+                    <div class="section-title">Android Integration</div>
+                    
+                    <div style="margin-bottom: 16px;">
+                        <div style="font-size: 13px; font-weight: 600; color: #555; margin-bottom: 8px;">build.gradle (Project Level)</div>
+                        <pre style="background: #f5f5f5; padding: 12px; border-radius: 4px; border-left: 3px solid #ff9800; margin: 0; overflow-x: auto;"><code class="mono" style="display: block; font-size: 12px;">repositories {
+    maven {
+        name = 'Central Portal Snapshots'
+        url = 'https://central.sonatype.com/repository/maven-snapshots/'
+    }
+    mavenCentral()
+}</code></pre>
                     </div>
-                `;
-            }
-            
+                    
+                    <div style="margin-bottom: 16px;">
+                        <div style="font-size: 13px; font-weight: 600; color: #555; margin-bottom: 8px;">build.gradle (App Level)</div>
+                        <pre style="background: #f5f5f5; padding: 12px; border-radius: 4px; border-left: 3px solid #4caf50; margin: 0; overflow-x: auto;"><code class="mono" style="display: block; font-size: 12px;">dependencies {
+    implementation "${data.groupId}:${data.artifactId}:${data.version}"
+}</code></pre>
+                    </div>
+                    
+                    <div style="font-size: 12px; color: #ff6b6b; padding: 12px; background: #fff5f5; border-radius: 4px; border-left: 3px solid #ff6b6b;">
+                        <strong>⚠ Note:</strong> SNAPSHOT builds are unstable. For production, use stable releases instead.
+                    </div>
+                </div>
+            `;
             // Artifacts table
             if (data.artifacts && data.artifacts.length > 0) {
                 html += `
@@ -374,7 +392,7 @@
                     </p>
                 </div>
             `;
-            
+
             return html;
         }
         
