@@ -197,30 +197,38 @@
             </div>
             <div class="input-field">
                 <label for="version">Version</label>
-                <input type="text" id="version" placeholder="1.0.0-SNAPSHOT">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <input type="text" id="version" placeholder="3.2.0" style="flex: 1;">
+                    <span style="color: #999; font-size: 13px; white-space: nowrap;">-SNAPSHOT</span>
+                </div>
             </div>
             <button onclick="checkPackage()">Check</button>
         </div>
-        <p class="helper-text">Enter Maven coordinates to check when a SNAPSHOT was published. Uses Sonatype Central snapshot repository.</p>
+        <p class="helper-text">Enter Maven coordinates to check when a SNAPSHOT was published. Version automatically appends <code class="mono">-SNAPSHOT</code>. Uses Sonatype Central snapshot repository.</p>
     </div>
     
     <div id="result" class="result-container"></div>
 
     <script>
-        // Update URL when form fields change
+        // Update URL on form submit
         function updateURL() {
-            const groupId = document.getElementById('groupId').value.trim();
-            const artifactId = document.getElementById('artifactId').value.trim();
-            const version = document.getElementById('version').value.trim();
+            let groupId = document.getElementById('groupId').value.trim();
+            let artifactId = document.getElementById('artifactId').value.trim();
+            let version = document.getElementById('version').value.trim();
+            
+            // Automatically add -SNAPSHOT to version
+            if (version && !version.endsWith('-SNAPSHOT')) {
+                version += '-SNAPSHOT';
+            }
             
             if (groupId || artifactId || version) {
                 const params = new URLSearchParams();
                 if (groupId) params.append('groupId', groupId);
                 if (artifactId) params.append('artifactId', artifactId);
                 if (version) params.append('version', version);
-                window.history.replaceState({}, '', `?${params.toString()}`);
+                window.history.pushState({}, '', `?${params.toString()}`);
             } else {
-                window.history.replaceState({}, '', window.location.pathname);
+                window.history.pushState({}, '', window.location.pathname);
             }
         }
 
@@ -229,24 +237,45 @@
             const params = new URLSearchParams(window.location.search);
             const groupId = params.get('groupId');
             const artifactId = params.get('artifactId');
-            const version = params.get('version');
+            let version = params.get('version');
+            
+            // Clear field values first
+            document.getElementById('groupId').value = '';
+            document.getElementById('artifactId').value = '';
+            document.getElementById('version').value = '';
             
             if (groupId) document.getElementById('groupId').value = groupId;
             if (artifactId) document.getElementById('artifactId').value = artifactId;
-            if (version) document.getElementById('version').value = version;
+            if (version) {
+                // Remove -SNAPSHOT suffix if present, since it's added automatically
+                if (version.endsWith('-SNAPSHOT')) {
+                    version = version.replace('-SNAPSHOT', '');
+                }
+                document.getElementById('version').value = version;
+            }
             
             // If all parameters are present, automatically check the package
             if (groupId && artifactId && version) {
                 // Use setTimeout to ensure DOM is fully ready
-                setTimeout(checkPackage, 100);
+                // Pass false to skip updateURL since we're loading from history
+                setTimeout(() => checkPackage(false), 100);
+            } else {
+                // Clear results if no params or incomplete params
+                document.getElementById('result').className = 'result-container';
+                document.getElementById('result').innerHTML = '';
             }
         }
 
-        async function checkPackage() {
-            const groupId = document.getElementById('groupId').value.trim();
-            const artifactId = document.getElementById('artifactId').value.trim();
-            const version = document.getElementById('version').value.trim();
+        async function checkPackage(shouldUpdateURL = true) {
+            let groupId = document.getElementById('groupId').value.trim();
+            let artifactId = document.getElementById('artifactId').value.trim();
+            let version = document.getElementById('version').value.trim();
             const resultEl = document.getElementById('result');
+            
+            // Automatically add -SNAPSHOT if not present
+            if (version && !version.endsWith('-SNAPSHOT')) {
+                version += '-SNAPSHOT';
+            }
             
             if (!groupId || !artifactId || !version) {
                 resultEl.className = 'result-container visible';
@@ -257,8 +286,10 @@
             resultEl.className = 'result-container visible';
             resultEl.innerHTML = '<div class="loading"><span class="spinner"></span>Fetching metadata...</div>';
             
-            // Update URL with current parameters
-            updateURL();
+            // Only update URL on user form submission, not on history navigation
+            if (shouldUpdateURL) {
+                updateURL();
+            }
             
             try {
                 const response = await fetch(`/api/check?groupId=${encodeURIComponent(groupId)}&artifactId=${encodeURIComponent(artifactId)}&version=${encodeURIComponent(version)}`);
@@ -404,11 +435,11 @@
         // Update URL when form fields change
         document.addEventListener('DOMContentLoaded', () => {
             loadQueryParams();
-            
-            // Add input event listeners to update URL in real-time
-            document.getElementById('groupId').addEventListener('input', updateURL);
-            document.getElementById('artifactId').addEventListener('input', updateURL);
-            document.getElementById('version').addEventListener('input', updateURL);
+        });
+
+        // Handle browser back/forward buttons
+        window.addEventListener('popstate', () => {
+            loadQueryParams();
         });
     </script>
 </body>
